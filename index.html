@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Arithme-Oh!</title>
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #fafafa;
+      color: #111;
+      margin: 20px;
+    }
+    h1 {
+      text-align: center;
+      font-weight: 600;
+      margin-bottom: 0.5em;
+    }
+    #controls {
+      text-align: center;
+      margin-bottom: 1em;
+    }
+    button {
+      font-family: inherit;
+      font-weight: 600;
+      background: #fff;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      padding: 0.6em 1.2em;
+      margin: 0 0.5em;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    button:hover {
+      background: #f5f5f5;
+      border-color: #ccc;
+    }
+
+    #areas {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+    }
+    .zone {
+      background: #fff;
+      border-radius: 8px;
+      padding: 1em;
+      width: 30%;
+      min-width: 260px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      margin-bottom: 1em;
+    }
+    .zone h2 {
+      font-size: 1.2em;
+      text-align: center;
+      margin-top: 0;
+      font-weight: 600;
+    }
+    .cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6em;
+      justify-content: center;
+      margin-top: 0.8em;
+    }
+    .card {
+      position: relative;
+      background: linear-gradient(135deg, #fff, #fdfdfd);
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 1.2em 0.8em;
+      width: 140px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    }
+    .card-logo {
+      font-size: 24px;
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      color: #555;
+    }
+    .card-title {
+      font-weight: 600;
+      font-size: 0.95em;
+      text-align: center;
+      margin-top: 28px;
+      line-height: 1.2em;
+    }
+    .card-desc {
+      font-size: 0.85em;
+      text-align: center;
+      margin-top: 0.4em;
+      color: #333;
+    }
+    #deck-count {
+      text-align: center;
+      font-size: 0.9em;
+      margin-top: 0.5em;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1>Arithme-Oh! Card Drawer</h1>
+
+  <div id="controls">
+    <button id="draw-2">Draw 2 Cards</button>
+    <button id="reset">Reset Game</button>
+  </div>
+
+  <div id="areas">
+    <div class="zone" id="deck-zone">
+      <h2>Deck</h2>
+      <div id="deck-count"></div>
+    </div>
+
+    <div class="zone" id="hand-zone">
+      <h2>Your Hand</h2>
+      <div class="cards" id="hand-cards"></div>
+    </div>
+
+    <div class="zone" id="played-zone">
+      <h2>Played Cards</h2>
+      <div class="cards" id="played-cards"></div>
+    </div>
+  </div>
+
+  <script>
+    // Card definitions with unicode logos
+    const masterCards = [
+      { logo: '𝑒',    name: "Euler's Number",           desc: "Add Euler's number to your life points" },
+      { logo: 'ln',   name: "Natural Log",              desc: "Take the natural log of the enemy" },
+      { logo: '½',    name: "Half",                     desc: "Half the enemy's life points" },
+      { logo: 'ℂ',    name: "Complex Plane",            desc: "Add 0i to both players on top of their real number life points" },
+      { logo: '∂',    name: "Decomposition 24",         desc: "Prime factorise the enemy's life points" },
+      { logo: 'min',  name: "Well Ordering Principle",  desc: "Reduce opponent's life points set to its smallest positive number" },
+      { logo: '↻',    name: "90° Rotation",             desc: "Bend any player's number to purely real or complex" },
+      { logo: '!',    name: "Factorial Buff",           desc: "Factorial your life points if you have fewer than 8" },
+      { logo: 'ℙ',    name: "Probability",              desc: "Exchange one card with your opponent" },
+      { logo: 'Ω',    name: "Sample Space",             desc: "Play 2 extra cards this turn" },
+      { logo: '⅟π',  name: "Inverse Circle",           desc: "Apply inverse area-of-circle to enemy's life points" },
+      { logo: '∛',    name: "Cube Root Set",            desc: "Split enemy's life points into its three cube roots" },
+      { logo: 'sin',  name: "Sine",                     desc: "Reduce enemy's life points to sin(life) + 1" },
+      { logo: 'ψ',    name: "Superposition",            desc: "Next opponent cards get randomized effects" },
+      { logo: '%',    name: "Modulo",                   desc: "Pick random n; mod from opponent life and subtract it" },
+      { logo: 'φ',    name: "Golden Ratio",             desc: "Multiply incoming damage by φ" },
+      { logo: '−',    name: "Subtraction",              desc: "Reduce the enemy's life points by 1" }
+    ];
+
+    let deck = [], hand = [], played = [];
+
+    // Fisher–Yates shuffle
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    // Initialize or reset game
+    function resetGame() {
+      deck   = shuffle(masterCards.slice());
+      hand   = [];
+      played = [];
+      drawMultiple(5);
+      renderAll();
+    }
+
+    function drawOne() {
+      if (!deck.length) return;
+      hand.push(deck.shift());
+      renderAll();
+    }
+    function drawMultiple(n) {
+      for (let i = 0; i < n && deck.length; i++) {
+        hand.push(deck.shift());
+      }
+      renderAll();
+    }
+
+    // Play a card from hand
+    function playCard(idx) {
+      const [card] = hand.splice(idx, 1);
+      played.push(card);
+      renderAll();
+    }
+
+    // Render deck count, hand and played zones
+    function renderAll() {
+      document.getElementById('deck-count')
+              .textContent = `Cards Remaining: ${deck.length}`;
+
+      const handDiv   = document.getElementById('hand-cards');
+      const playedDiv = document.getElementById('played-cards');
+      handDiv.innerHTML   = '';
+      playedDiv.innerHTML = '';
+
+      hand.forEach((c, i) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="card-logo">${c.logo}</div>
+          <div class="card-title">${c.name}</div>
+          <div class="card-desc">${c.desc}</div>
+        `;
+        card.onclick = () => playCard(i);
+        handDiv.appendChild(card);
+      });
+
+      played.forEach(c => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="card-logo">${c.logo}</div>
+          <div class="card-title">${c.name}</div>
+          <div class="card-desc">${c.desc}</div>
+        `;
+        playedDiv.appendChild(card);
+      });
+    }
+
+    // Event bindings
+    document.getElementById('draw-2').onclick = () => drawMultiple(2);
+    document.getElementById('reset').onclick  = resetGame;
+
+    // Start
+    resetGame();
+  </script>
+</body>
+</html>
