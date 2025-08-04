@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Arithme-Oh!</title>
+  <title>Arithme-Oh! Card Drawer</title>
   <!-- Google Font -->
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600&display=swap" rel="stylesheet">
   <style>
@@ -36,7 +36,6 @@
       background: #f5f5f5;
       border-color: #ccc;
     }
-
     #areas {
       display: flex;
       justify-content: space-around;
@@ -120,12 +119,10 @@
       <h2>Deck</h2>
       <div id="deck-count"></div>
     </div>
-
     <div class="zone" id="hand-zone">
       <h2>Your Hand</h2>
       <div class="cards" id="hand-cards"></div>
     </div>
-
     <div class="zone" id="played-zone">
       <h2>Played Cards</h2>
       <div class="cards" id="played-cards"></div>
@@ -133,7 +130,7 @@
   </div>
 
   <script>
-    // Card definitions with unicode logos
+    // Your 17 unique cards
     const masterCards = [
       { logo: '𝑒',    name: "Euler's Number",           desc: "Add Euler's number to your life points" },
       { logo: 'ln',   name: "Natural Log",              desc: "Take the natural log of the enemy" },
@@ -165,20 +162,19 @@
       return arr;
     }
 
-    // Initialize or reset game
+    // Build a 52-card deck with uniform pick chance
     function resetGame() {
-      deck   = shuffle(masterCards.slice());
-      hand   = [];
+      deck = Array.from({length: 52}, () => {
+        const idx = Math.floor(Math.random() * masterCards.length);
+        return {...masterCards[idx]};
+      });
+      deck = shuffle(deck);
+      hand = [];
       played = [];
       drawMultiple(5);
       renderAll();
     }
 
-    function drawOne() {
-      if (!deck.length) return;
-      hand.push(deck.shift());
-      renderAll();
-    }
     function drawMultiple(n) {
       for (let i = 0; i < n && deck.length; i++) {
         hand.push(deck.shift());
@@ -186,14 +182,11 @@
       renderAll();
     }
 
-    // Play a card from hand
-    function playCard(idx) {
-      const [card] = hand.splice(idx, 1);
-      played.push(card);
+    function playCard(i) {
+      played.push(hand.splice(i, 1)[0]);
       renderAll();
     }
 
-    // Render deck count, hand and played zones
     function renderAll() {
       document.getElementById('deck-count')
               .textContent = `Cards Remaining: ${deck.length}`;
@@ -204,34 +197,34 @@
       playedDiv.innerHTML = '';
 
       hand.forEach((c, i) => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
+        const el = document.createElement('div');
+        el.className = 'card';
+        el.innerHTML = `
           <div class="card-logo">${c.logo}</div>
           <div class="card-title">${c.name}</div>
           <div class="card-desc">${c.desc}</div>
         `;
-        card.onclick = () => playCard(i);
-        handDiv.appendChild(card);
+        el.onclick = () => playCard(i);
+        handDiv.appendChild(el);
       });
 
       played.forEach(c => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
+        const el = document.createElement('div');
+        el.className = 'card';
+        el.innerHTML = `
           <div class="card-logo">${c.logo}</div>
           <div class="card-title">${c.name}</div>
           <div class="card-desc">${c.desc}</div>
         `;
-        playedDiv.appendChild(card);
+        playedDiv.appendChild(el);
       });
     }
 
-    // Event bindings
+    // Button handlers
     document.getElementById('draw-2').onclick = () => drawMultiple(2);
     document.getElementById('reset').onclick  = resetGame;
 
-    // Start
+    // Kick things off
     resetGame();
   </script>
 </body>
